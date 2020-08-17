@@ -9,5 +9,8 @@ bin
 
 # VSCode
 .vscode
+.settings
+.classpath
+.project
 
 # Git
