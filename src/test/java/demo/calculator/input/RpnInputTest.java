@@ -57,7 +57,7 @@ public class RpnInputTest {
     var expectedEntity = expectedEntities.get(idx);
     assertTrue("actual entity should be of same type as expected", actualEntity.getClass() == expectedEntity.getClass());
     if (actualEntity instanceof Operand) {
-      assertEquals("actual operand should have same value as expected", ((Operand)actualEntity).getValue(), ((Operand)expectedEntity).getValue(), 0.00000000005);
+      assertEquals("actual operand should have same value as expected", ((Operand)actualEntity).getValue(), ((Operand)expectedEntity).getValue());
     }
     var actualPosition = actualInputs.get(idx).getPosition();
     var expectedNotion = inputs.substring(actualPosition, actualPosition + expectedEntity.getNotion().length());

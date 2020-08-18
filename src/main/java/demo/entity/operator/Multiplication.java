@@ -1,5 +1,8 @@
 package demo.entity.operator;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
+
 import demo.entity.IEntity;
 import demo.entity.operand.Operand;
 
@@ -12,7 +15,16 @@ public class Multiplication extends Operator {
   }
 
   public IEntity perform(Operand... args) {
-    double resultValue = args[0].getValue() * args[1].getValue();
+    var superResult = super.perform(args);
+    if (superResult instanceof Operand) {
+      return superResult;
+    }
+
+    var multiplicend = args[0].getValue().setScale(Operator.SCALE, Operand.ROUNDING_MODE);
+    var multiplicand = args[1].getValue().setScale(Operator.SCALE, Operand.ROUNDING_MODE);
+    var precision = Math.min(multiplicend.precision(), multiplicand.precision());
+    
+    BigDecimal resultValue = multiplicend.multiply(multiplicand, new MathContext(precision));
     return new Operand(resultValue);
   }
 }

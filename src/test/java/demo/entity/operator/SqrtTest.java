@@ -3,11 +3,14 @@ package demo.entity.operator;
 import org.junit.Test;
 
 import demo.entity.IEntity;
+import demo.entity.operand.Nan;
 import demo.entity.operand.Operand;
 import demo.exception.RpnException;
 
 import static org.junit.Assert.*;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.Random;
 
 public class SqrtTest {
@@ -37,14 +40,22 @@ public class SqrtTest {
     var sqrt = new Sqrt();
     assertEquals("sqrt's result of perform without args should be itself", sqrt, sqrt.perform());
 
-    var v = rand.nextDouble() * rand.nextInt(100);
-    var expectedResultValue = Math.sqrt(v);
+    var v = new BigDecimal(rand.nextLong() / rand.nextInt() + rand.nextDouble() * rand.nextInt()).setScale(Operator.SCALE, Operand.ROUNDING_MODE);
+    BigDecimal expectedResultValue = null;
+    if (v.compareTo(BigDecimal.ZERO) != -1) {
+     expectedResultValue = v.sqrt(new MathContext(v.precision()));
+    }
     var operand = new Operand(v);
     var result = sqrt.perform(new Operand[]{operand});
     
     assertTrue("sqrt's result should be instance of Operand", result instanceof Operand);
     assertTrue("sqrt's result should be instance of IEntity", result instanceof IEntity);
-    assertEquals("sqrt's result should hold correct value", ((Operand)result).getValue(), expectedResultValue, 0.0000000000000005);
+    if (expectedResultValue == null) {
+      assertTrue("sqrt's result should be instance of Nan", result instanceof Nan);
+    }
+    else {
+      assertEquals("sqrt's result should hold correct value", ((Operand)result).getValue(), expectedResultValue);
+    }
   }
 
   @Test public void testParse() throws RpnException {

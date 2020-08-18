@@ -6,6 +6,8 @@ import demo.entity.IEntity;
 
 import static org.junit.Assert.*;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Random;
 
@@ -13,7 +15,7 @@ public class OperandTest {
   static Random rand = new Random();
 
   @Test public void testConstructor() {
-    var value = rand.nextDouble() * rand.nextInt(100) - rand.nextDouble() * rand.nextInt(100);
+    var value = new BigDecimal(rand.nextLong() / rand.nextInt() + rand.nextDouble() * rand.nextInt());
     var operand = new Operand(value);
 
     assertTrue("Operand should be instance of Operand", operand instanceof Operand);
@@ -22,58 +24,60 @@ public class OperandTest {
   }
 
   @Test public void testNotion() {
-    var value = rand.nextDouble() * rand.nextInt(100) - rand.nextDouble() * rand.nextInt(100);
+    var value = new BigDecimal(rand.nextInt() / rand.nextInt() + rand.nextDouble() * rand.nextInt());
     var operand = new Operand(value);
 
     var notion = operand.getNotion();
-    var notionValue = Double.parseDouble(notion);
-    var iNotionPart = (long) notionValue;
-    var fNotionPart = notionValue - iNotionPart;
-    var iValuePart = (long) value;
-    var fValuePart = value - iValuePart;
+    var notionValue = new BigDecimal(notion);
+    var notionIntegralPart = notionValue.setScale(0, RoundingMode.DOWN);
+    var notionFractionPart = notionValue.subtract(notionIntegralPart);
+
+    var operandIntegralPart = operand.getValue().setScale(0, RoundingMode.DOWN);
+    var operandFractionPart = operand.getValue().subtract(operandIntegralPart).setScale(Operand.SCALE, Operand.ROUNDING_MODE).stripTrailingZeros();
     
-    assertTrue("Operand should have correct notation integration part", iNotionPart == iValuePart);
-    assertEquals("Operand should have correct notation fractional part", fNotionPart, fValuePart, 0.00000000005);
+    assertEquals("Operand should have correct notation integration part", notionIntegralPart, operandIntegralPart);
+    assertEquals("Operand should have correct notation fractional part", notionFractionPart, operandFractionPart);
   }
 
   @Test public void testValue() {
-    var value = rand.nextDouble() * rand.nextInt(100) - rand.nextDouble() * rand.nextInt(100);
+    var value = new BigDecimal(rand.nextLong() / rand.nextInt() + rand.nextDouble() * rand.nextInt());
     var operand = new Operand(value);
 
-    assertTrue("Operand should have exact value", value == operand.getValue());
+    assertEquals("Operand should have exact value", value, operand.getValue());
   }
 
   @Test public void testPerform() {
-    var value = rand.nextDouble() * rand.nextInt(100) - rand.nextDouble() * rand.nextInt(100);
+    var value = new BigDecimal(rand.nextLong() / rand.nextInt() + rand.nextDouble() * rand.nextInt());
     var operand = new Operand(value);
 
     assertEquals("Operand should return itself when performed", operand, operand.perform());
   }
 
   @Test public void testParse() {
-    var value = rand.nextDouble() * rand.nextInt(100) - rand.nextDouble() * rand.nextInt(100);
+    var value = new BigDecimal(rand.nextLong() / rand.nextInt() + rand.nextDouble() * rand.nextInt());
     var operand = new Operand(value);
+    
     var notion = operand.getNotion();
     var notionValue = Operand.parse(notion).getValue();
 
-    assertEquals("Operand should have same value after parsing its notion", value, notionValue, 0.00000000005);
+    var operandValue = operand.getValue().setScale(Operand.SCALE, Operand.ROUNDING_MODE);
+
+    assertEquals("Operand should have same value after parsing its notion", notionValue, operandValue);
   }
 
-  @Test public void testSpecialValues() {
-    List<Double> specialValues = List.of(
-      Double.parseDouble("NaN"),
-      Double.parseDouble("Infinity"),
-      Double.parseDouble("-NaN"),
-      Double.parseDouble("-Infinity")
+  @Test public void testSpecialValues() throws NoSuchFieldException, IllegalArgumentException, IllegalAccessException,
+      SecurityException {
+    List<Operand> specialValNotions = List.of(
+      new Nan(),
+      new Infinity(),
+      new NegativeInfinity()
     );
     
-    for (double value : specialValues) {
-      var operand = new Operand(value);
-      assertEquals("Operand should have exact value", value, operand.getValue(), 0.00000000005);
+    for (Operand operand : specialValNotions) {
+      assertEquals("Operand should have null value", operand.getValue(), null);
       assertEquals("Operand should return itself when performed", operand, operand.perform());
       var notion = operand.getNotion();
-      var notionValue = Operand.parse(notion).getValue();
-      assertEquals("Operand should have same value after parsing its notion", value, notionValue, 0.00000000005);
+      assertEquals("Operand should have same notion", notion, operand.getClass().getField("NOTION").get(null));
     }
   }
 }

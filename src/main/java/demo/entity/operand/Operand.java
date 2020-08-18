@@ -1,18 +1,22 @@
 package demo.entity.operand;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import demo.entity.IEntity;
 
 public class Operand implements IEntity {
-  final String notion;
-  final double value;
+  String notion;
+  BigDecimal value;
 
-  public static final String DECIMAL_FORMAT = "#0.##########";
+  public static final int SCALE = 10;
+  public static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_EVEN;
 
-  public Operand(double value) {
-    this.notion = (new DecimalFormat(Operand.DECIMAL_FORMAT)).format(value);
+  public Operand() { }
+
+  public Operand(BigDecimal value) {
+    var notionVal = value.setScale(SCALE, ROUNDING_MODE).stripTrailingZeros();
+    this.notion = notionVal.toPlainString();   
     this.value = value;
   }
 
@@ -20,7 +24,7 @@ public class Operand implements IEntity {
     return this.notion;
   }
 
-  public double getValue() {
+  public BigDecimal getValue() {
     return this.value;
   }
 
@@ -29,23 +33,22 @@ public class Operand implements IEntity {
   }
 
   public static Operand parse(String notion) throws NumberFormatException {
-    var dfs = DecimalFormatSymbols.getInstance();
-    var negativeInfinityNotion = Character.toString(dfs.getMinusSign()) + dfs.getInfinity();
-    var infinityNotion = dfs.getInfinity();
-    var nanNotion = dfs.getNaN();
+    var negativeInfinityNotion = NegativeInfinity.NOTION;
+    var infinityNotion = Infinity.NOTION;
+    var nanNotion = Nan.NOTION;
     
     if (notion.equals(negativeInfinityNotion)) {
-      return new Operand(Double.parseDouble("-Infinity"));
+      return new NegativeInfinity();
     }
 
     if (notion.equals(infinityNotion)) {
-      return new Operand(Double.parseDouble("Infinity"));
+      return new Infinity();
     }
 
     if (notion.equals(nanNotion)) {
-      return new Operand(Double.parseDouble("NaN"));
+      return new Nan();
     }
-
-    return new Operand(Double.parseDouble(notion));
+    
+    return new Operand(new BigDecimal(notion));
   }
 }

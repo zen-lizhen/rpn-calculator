@@ -7,6 +7,7 @@ import demo.exception.RpnException;
 public abstract class Operator implements IEntity {
   final String notion;
   final int numArgs;
+  public static final int SCALE = 15;
 
   public Operator(String notion, int numArgs) {
     this.notion = notion;
@@ -26,25 +27,11 @@ public abstract class Operator implements IEntity {
   }
 
   public IEntity perform(Operand... args) {
-    // if (argList == null || argList.size() < this.numArgs) {
-    //   var e = new RpnException("InsufficientParameters");
-    //   e.addMsgArg(this.notion);
-    //   throw e;
-    // }
-    // else if (argList.size() > this.numArgs) {
-    //   var e = new RpnException("TooManyParameters");
-    //   e.addMsgArg(this.notion);
-    //   throw e;
-    // }
-
-    // for (IEntity entity : argList) {
-    //   if (!(entity instanceof Operand)) {
-    //     var e = new RpnException("CannotProcessEntity");
-    //     e.addMsgArg(this.notion);
-    //     e.addMsgArg(entity.getNotion());
-    //     throw e;
-    //   }
-    // }
+    for (Operand arg : args) {
+      if (arg.getValue() == null) {
+        return arg;
+      }
+    }
 
     return this;
   }

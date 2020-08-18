@@ -4,6 +4,9 @@ import demo.entity.control.Control;
 import demo.entity.control.Clear;
 import demo.entity.control.Redo;
 import demo.entity.control.Undo;
+import demo.entity.operand.Infinity;
+import demo.entity.operand.Nan;
+import demo.entity.operand.NegativeInfinity;
 import demo.entity.operand.Operand;
 import demo.entity.operator.Operator;
 import demo.entity.operator.Addition;
@@ -14,6 +17,7 @@ import demo.entity.operator.Subtraction;
 
 import java.util.Random;
 import java.lang.reflect.InvocationTargetException;
+import java.math.BigDecimal;
 
 public class RpnTest {
   private static Random rand = new Random();
@@ -35,7 +39,7 @@ public class RpnTest {
     Double.NaN,
     Double.parseDouble("Infinity"),
     Double.parseDouble("-Infinity"),
-    rand.nextDouble() * rand.nextLong(),
+    rand.nextLong() / rand.nextInt() + rand.nextDouble() * rand.nextInt(),
   };
 
   public static Control getRandomControl() {
@@ -75,11 +79,25 @@ public class RpnTest {
   public static Operand getRandomOperand(boolean includeSpecialValue) {
     if (includeSpecialValue) {
       double val = RpnTest.SUPPORTED_OPERAND_VALUE[rand.nextInt(RpnTest.SUPPORTED_OPERAND_VALUE.length)];
-      Operand operand = new Operand(val);
+      Operand operand = null;
+      if (Double.isNaN(val)) {
+        operand = new Nan();
+      }
+      else if (Double.isInfinite(val)) {
+        if (val >= 0) {
+          operand = new Infinity();
+        }
+        else {
+          operand = new NegativeInfinity();
+        }
+      }
+      else {
+        operand = new Operand(new BigDecimal(val));
+      }
       return operand;
     }
     else {
-      return new Operand(rand.nextDouble() * rand.nextInt());
+      return new Operand(new BigDecimal(rand.nextLong() / rand.nextInt() + rand.nextDouble() * rand.nextInt()));
     }
   }
 }
