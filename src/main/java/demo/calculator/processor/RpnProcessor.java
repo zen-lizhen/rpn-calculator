@@ -43,15 +43,6 @@ public class RpnProcessor implements IProcessor {
         rpnControl(item);
       }
       else {
-        if (resultStack.size() > 0) {
-          Stack<RpnInput> temp = new Stack<RpnInput>();
-          while (resultStack.size() > 0) {
-            temp.push(resultStack.pop());
-          }
-          while (temp.size() > 0) {
-            todoStack.push(temp.pop());
-          }
-        }
         todoStack.push(item);
       }
     }
@@ -88,16 +79,19 @@ public class RpnProcessor implements IProcessor {
       perform();
     }
 
+    while (!argStack.isEmpty()) {
+      resultStack.push(argStack.pop());
+    }
+
     if (opStack.size() != 0) {
       var op = opStack.peek();
       var rpnException = new RpnException("InsufficientParameters");
       rpnException.addMsgArg(op.getEntity().getNotion());
       rpnException.addMsgArg(op.getPosition());
+      opStack.clear();
+      resultStack.clear();
+      argStack.clear();
       throw rpnException;
-    }
-
-    while (!argStack.isEmpty()) {
-      resultStack.push(argStack.pop());
     }
   }
 

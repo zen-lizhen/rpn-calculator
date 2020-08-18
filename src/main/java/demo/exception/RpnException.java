@@ -1,6 +1,9 @@
 package demo.exception;
 
 import java.util.List;
+
+import demo.utils.StringResourceHandler;
+
 import java.util.ArrayList;
 
 public class RpnException extends Exception {
@@ -20,5 +23,9 @@ public class RpnException extends Exception {
 
   public void addMsgArg(Object arg, int index) {
     this.msgArgs.add(index, arg);
+  }
+
+  public String getMessage() {
+    return StringResourceHandler.getString(this.name, this.msgArgs);
   }
 }
