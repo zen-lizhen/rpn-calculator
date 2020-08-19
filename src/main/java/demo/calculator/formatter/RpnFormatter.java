@@ -1,8 +1,22 @@
 package demo.calculator.formatter;
 
+import demo.calculator.unit.RpnUnit;
+
+import java.util.Collection;
+
 public class RpnFormatter implements IFormatter {
   
-  public void print(String s) {
-    System.out.println(s);
+  @Override
+  public String format(Collection<?> result) {
+    if (result == null || result.size() == 0) {
+      return "";
+    }
+    var resultItems = result.stream().map(item -> ((RpnUnit) item).getNotion()).toArray();
+    StringBuffer sb = new StringBuffer();
+    for (Object item : resultItems) {
+      sb.append(item.toString());
+      sb.append(" ");
+    }
+    return sb.toString();
   }
 }

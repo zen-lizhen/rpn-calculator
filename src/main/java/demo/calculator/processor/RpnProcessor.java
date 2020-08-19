@@ -1,67 +1,45 @@
 package demo.calculator.processor;
 
-import demo.calculator.input.RpnInput;
+import demo.calculator.unit.RpnUnit;
 import demo.entity.operand.Operand;
 import demo.entity.operator.Operator;
-import demo.entity.control.Clear;
-import demo.entity.control.Control;
-import demo.entity.control.Undo;
-import demo.entity.control.Redo;
 import demo.exception.RpnException;
 
 import java.util.Stack;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
 
 public class RpnProcessor implements IProcessor {
 
-  Stack<demo.calculator.input.RpnInput> todoStack, resultStack, opStack, argStack, undoneStack;
+  Stack<RpnUnit> todoStack, resultStack, opStack, argStack;
 
   public RpnProcessor() {
-    this.todoStack = new Stack<RpnInput>();
-    this.resultStack = new Stack<RpnInput>();
-    this.opStack = new Stack<RpnInput>();
-    this.argStack = new Stack<RpnInput>();
-    this.undoneStack = new Stack<RpnInput>();
+    todoStack = new Stack<RpnUnit>();
+    resultStack = new Stack<RpnUnit>();
+    opStack = new Stack<RpnUnit>();
+    argStack = new Stack<RpnUnit>();
   }
 
-  public Stack<RpnInput> getResult() {
-    return resultStack;
+  public void reset() {
+    todoStack = new Stack<RpnUnit>();
+    resultStack = new Stack<RpnUnit>();
+    opStack = new Stack<RpnUnit>();
+    argStack = new Stack<RpnUnit>();
   }
 
-  public void process() throws RpnException {
-    process(null);
-  }
-
-  public void process(List<RpnInput> input) throws RpnException {
-    if (input == null || input.size() == 0) {
-      return;
+  @Override
+  public Collection<?> process(Collection<?> inputs) throws Exception {
+    if (inputs == null || inputs.size() == 0) {
+      return resultStack;
     }
-    for (demo.calculator.input.RpnInput item : input) {
-      if (item.getEntity() instanceof Control) {
-        rpnProcess();
-        rpnControl(item);
-      }
-      else {
-        todoStack.push(item);
-      }
+    todoStack = resultStack;
+    resultStack = new Stack<RpnUnit>();
+    for (var item : inputs) {
+      todoStack.push((RpnUnit)item);
     }
     rpnProcess();
-  }
-
-  private void rpnControl(RpnInput item) {
-    if (item.getEntity() instanceof Undo) {
-      undo();
-    }
-    else if (item.getEntity() instanceof Clear) {
-      clear();
-    }
-    else if (item.getEntity() instanceof Redo) {
-      redo();
-    }
-    else {
-      ;
-    }
+    return resultStack;
   }
 
   private void rpnProcess() throws RpnException {
@@ -69,11 +47,9 @@ public class RpnProcessor implements IProcessor {
       var item = todoStack.pop();
       if (item.getEntity() instanceof Operand) {
         argStack.push(item);
-      }
-      else if (item.getEntity() instanceof Operator) {
+      } else if (item.getEntity() instanceof Operator) {
         opStack.push(item);
-      }
-      else {
+      } else {
         ;
       }
       perform();
@@ -95,48 +71,31 @@ public class RpnProcessor implements IProcessor {
     }
   }
 
-  private void undo() {
-    if (resultStack.size() == 0) {
-      return;
-    }
-    undoneStack.push(resultStack.pop());
-  }
-
-  private void redo() {
-    if (undoneStack.size() == 0) {
-      return;
-    }
-    resultStack.push(undoneStack.pop());
-  }
-
-  private void clear() {
-    resultStack.clear();
-  }
-
   private void perform() {
     if (opStack.size() == 0) {
       return;
     }
     var item = opStack.peek().getEntity();
-    var requiredNumArgs = ((Operator)item).getNumArgs();
+    var requiredNumArgs = ((Operator) item).getNumArgs();
     var itemPosition = opStack.peek().getPosition();
     if (argStack.size() < requiredNumArgs) {
       return;
     }
-    List<RpnInput> args = new ArrayList<RpnInput>();
+    List<RpnUnit> args = new ArrayList<RpnUnit>();
     while (args.size() < requiredNumArgs && argStack.peek().getPosition() < itemPosition) {
       args.add(0, argStack.pop());
     }
     if (args.size() < requiredNumArgs) {
-      for (RpnInput arg : args) {
+      for (RpnUnit arg : args) {
         argStack.push(arg);
       }
       return;
     }
     Operand[] arguments = new Operand[args.size()];
     for (int i = 0; i < arguments.length; i++) {
-      arguments[i] = (Operand)args.get(arguments.length - 1 - i).getEntity();
+      arguments[i] = (Operand) args.get(arguments.length - 1 - i).getEntity();
     }
-    todoStack.push(new RpnInput(((Operator)opStack.pop().getEntity()).perform(arguments), -1));
+    todoStack.push(new RpnUnit(((Operator) opStack.pop().getEntity()).perform(arguments), -1));
   }
+
 }

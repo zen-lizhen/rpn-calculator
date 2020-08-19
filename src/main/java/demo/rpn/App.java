@@ -13,12 +13,12 @@ public class App {
 
     public static void main(String[] args) {
         while (true) {
-            System.out.println("Please input commands.");
+            System.out.println("Please input commands. Type 'quit' to quit.");
             String input = scanner.nextLine();
             if (input.equals("quit")) {
                 return;
             }
-            rpnCalculator.process(input);
+            System.out.println(rpnCalculator.process(input));
         }
     }
 }

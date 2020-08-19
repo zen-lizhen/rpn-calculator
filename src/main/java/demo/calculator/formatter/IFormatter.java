@@ -1,5 +1,7 @@
 package demo.calculator.formatter;
 
+import java.util.Collection;
+
 public interface IFormatter {
-  public void print(String s);
+  public String format(Collection<?> obj);
 }

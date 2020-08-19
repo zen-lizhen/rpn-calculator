@@ -1,66 +1,60 @@
 package demo.calculator;
 
+import java.util.List;
+
 import demo.calculator.formatter.IFormatter;
 import demo.calculator.processor.IProcessor;
 import demo.calculator.formatter.RpnFormatter;
-import demo.calculator.input.RpnInput;
 import demo.calculator.processor.RpnProcessor;
+import demo.calculator.unit.RpnUnit;
+import demo.entity.control.Clear;
+import demo.entity.control.Control;
+import demo.entity.control.Undo;
 
-import java.util.Stack;
-
-public class RpnCalculator implements IProcessor, IFormatter {
+public class RpnCalculator {
   private IProcessor rpnProcessor;
   private IFormatter rpnFormatter;
-  private String input;
+  private RpnMemento rpnMemento;
+  private String cache;
 
   public RpnCalculator() {
     rpnProcessor = new RpnProcessor();
     rpnFormatter = new RpnFormatter();
-    this.input = "";
+    rpnMemento = new RpnMemento();
+    cache = "";
   }
 
-  public void process() {
+  public String process(String input) {
     try {
-      ((RpnProcessor)rpnProcessor).process(RpnInput.parse(this.input));
-      print(getResultString());
+      List<RpnUnit> cacheUnits = RpnUnit.parse(cache);
+      rpnProcessor.process(cacheUnits);
+      List<RpnUnit> inputUnits = RpnUnit.parse(cache + input);
+      for (int i = cacheUnits.size(); i < inputUnits.size(); i++) {
+        var unit = inputUnits.get(i);
+        if (! (unit.getEntity() instanceof Control)) {
+          var result = rpnProcessor.process(List.of(unit));
+          rpnMemento.saveToDone(cache);
+          cache = rpnFormatter.format(result);
+        }
+        else {
+          if (unit.getEntity() instanceof Undo) {
+            rpnProcessor.reset();
+            var result = rpnProcessor.process(RpnUnit.parse(rpnMemento.getLastDone()));
+            cache = rpnFormatter.format(result);
+          }
+          else if (unit.getEntity() instanceof Clear) {
+            rpnMemento.saveToDone(cache);
+            rpnProcessor.reset();
+            var result = rpnProcessor.process(RpnUnit.parse(""));
+            cache = rpnFormatter.format(result);
+          }
+        }
+      }
+      rpnProcessor.reset();
+      return cache;
     } catch (Exception exception) {
-      clearInput();
-      rpnFormatter.print(exception.getMessage());
+      this.cache = "";
+      return exception.getMessage();
     }
-  }
-
-  public void process(String input) {
-    takeInput(input);
-    process();
-  }
-
-  public void print(String s) {
-    clearInput();
-    takeInput(s);
-    rpnFormatter.print(s);
-  }
-
-  public Stack<RpnInput> getResult() {
-    return ((RpnProcessor)rpnProcessor).getResult();
-  }
-
-  private String getResultString() {
-    var resultStack = getResult();
-    var results = resultStack.stream().map(item -> item.getNotion()).toArray();
-    StringBuffer sb = new StringBuffer();
-    for (Object result : results) {
-      sb.append(result.toString());
-      sb.append(" ");
-    }
-    resultStack.clear();
-    return sb.toString();
-  }
-
-  private void takeInput(String input) {
-    this.input += input;
-  }
-
-  private void clearInput() {
-    this.input = "";
   }
 }

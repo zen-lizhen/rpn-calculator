@@ -1,4 +1,4 @@
-package demo.calculator.input;
+package demo.calculator.unit;
 
 import demo.entity.IEntity;
 import demo.position.IPosition;
@@ -11,11 +11,11 @@ import java.util.StringTokenizer;
 import java.util.List;
 import java.util.LinkedList;
 
-public class RpnInput implements IEntity, IPosition {
+public class RpnUnit implements IEntity, IPosition, Cloneable {
   final int position;
   final IEntity entity;
 
-  public RpnInput(IEntity entity, int position) {
+  public RpnUnit(IEntity entity, int position) {
     this.entity = entity;
     this.position = position;
   }
@@ -36,8 +36,20 @@ public class RpnInput implements IEntity, IPosition {
     return entity;
   }
 
-  public static List<RpnInput> parse(String inputs) throws RpnException {
-    var rpnInputs = new LinkedList<RpnInput>();
+  @Override
+  public Object clone() {
+    IEntity entity = null;
+    try {
+      entity = RpnUnit.parseEntity(this.entity.getNotion());
+    } catch (RpnException e) {
+      ; // should never throw exception
+    }
+    var position = this.position;
+    return new RpnUnit(entity, position);
+  }
+
+  public static List<RpnUnit> parse(String inputs) throws RpnException {
+    var rpnInputs = new LinkedList<RpnUnit>();
     if (inputs == null) {
       return rpnInputs;
     }
@@ -49,7 +61,7 @@ public class RpnInput implements IEntity, IPosition {
       idx += tok.length() + 1;
       try {
         var entity = parseEntity(tok);
-        rpnInputs.add(new RpnInput(entity, position));
+        rpnInputs.add(new RpnUnit(entity, position));
       }
       catch (RpnException rpnException) {
         rpnException.addMsgArg(position);
